@@ -21,6 +21,19 @@ and measure definitions; the Power BI version is built from the TMDL model per
 |---|---|---|
 | ![exec](docs/screenshots/1_executive_overview.png) | ![exceptions](docs/screenshots/2_exceptions.png) | ![forecast](docs/screenshots/3_forecast_capacity.png) |
 
+### Interactive version (Streamlit)
+
+A free, Mac-native, deployable interactive build of the same dashboard lives in
+`app/streamlit_app.py`. It computes KPIs with the *same* verified measure
+definitions and adds date / queue / channel filters.
+
+```bash
+streamlit run app/streamlit_app.py
+```
+
+Deploy free to a live URL via Streamlit Community Cloud (share.streamlit.io)
+pointing at `app/streamlit_app.py`.
+
 ## Scenario
 
 A national member-support contact center (queues: intake, crisis, general
@@ -161,12 +174,14 @@ integration** (OAuth, pagination, retry, schema mapping) · reporting automation
 ## Repo layout
 
 ```
-scripts/    generate_data, forecast, erlang, anomaly, validate, run_pipeline,
-            genesys_ingest, mock_genesys_server
+scripts/    generate_data, forecast, erlang, anomaly, validate, verify_measures,
+            build_dashboard, run_pipeline, genesys_ingest, mock_genesys_server
+app/        streamlit_app.py (interactive dashboard)
+tests/      Genesys contract test (docs-shaped fixture), measures, app smoke
 docs/       data_dictionary.md, dax_measures.md, powerbi_build_guide.md,
-            power_query/*.m
+            genesys_integration.md, power_query/*.m, screenshots/*.png
 pbip/       ContactCenter.SemanticModel (model + measures as TMDL)
-.github/    workflows/refresh.yml (scheduled refresh + quality gate)
+.github/    workflows/refresh.yml (scheduled refresh + quality gate + tests)
 data/        generated CSVs + metrics_report.json (created by the pipeline)
 METRICS.md  validated, reproducible headline metrics
 ```

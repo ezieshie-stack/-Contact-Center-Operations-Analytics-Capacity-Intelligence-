@@ -1,0 +1,85 @@
+{
+  "conversations": [
+    {
+      "conversationId": "conv-5001",
+      "conversationStart": "2026-05-01T13:05:12.000Z",
+      "conversationEnd": "2026-05-01T13:10:52.000Z",
+      "originatingDirection": "inbound",
+      "participants": [
+        {
+          "participantId": "p-cust-5001",
+          "purpose": "customer",
+          "sessions": [
+            {
+              "sessionId": "s-5001-c",
+              "mediaType": "voice",
+              "queueId": "q-1001-intake",
+              "direction": "inbound",
+              "segments": [
+                {
+                  "segmentStart": "2026-05-01T13:05:12.000Z",
+                  "segmentEnd": "2026-05-01T13:05:24.000Z",
+                  "segmentType": "interact",
+                  "queueId": "q-1001-intake",
+                  "wrapUpCode": "Resolved"
+                }
+              ],
+              "metrics": [
+                {"name": "tWait", "value": 12000},
+                {"name": "tAnswered", "value": 12000},
+                {"name": "tHandle", "value": 300000},
+                {"name": "tAcw", "value": 40000},
+                {"name": "nOffered", "value": 1},
+                {"name": "nAnswered", "value": 1}
+              ]
+            }
+          ]
+        },
+        {
+          "participantId": "p-agent-5001",
+          "purpose": "agent",
+          "userId": "1010",
+          "sessions": [
+            {"sessionId": "s-5001-a", "mediaType": "voice"}
+          ]
+        }
+      ]
+    },
+    {
+      "conversationId": "conv-5002",
+      "conversationStart": "2026-05-01T13:07:40.000Z",
+      "originatingDirection": "inbound",
+      "participants": [
+        {
+          "participantId": "p-cust-5002",
+          "purpose": "customer",
+          "sessions": [
+            {
+              "sessionId": "s-5002-c",
+              "mediaType": "message",
+              "queueId": "q-1004-genchat",
+              "direction": "inbound",
+              "segments": [
+                {
+                  "segmentStart": "2026-05-01T13:07:40.000Z",
+                  "segmentEnd": "2026-05-01T13:08:25.000Z",
+                  "segmentType": "interact",
+                  "queueId": "q-1004-genchat"
+                }
+              ],
+              "metrics": [
+                {"name": "tWait", "value": 45000},
+                {"name": "tAbandon", "value": 45000},
+                {"name": "nOffered", "value": 1}
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "totalHits": 2,
+  "pageSize": 100,
+  "pageNumber": 1,
+  "pageCount": 1
+}

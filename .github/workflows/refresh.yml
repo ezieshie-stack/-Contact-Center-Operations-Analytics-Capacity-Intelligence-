@@ -45,6 +45,9 @@ jobs:
       - name: Render dashboard pages
         run: PYTHONPATH=scripts python scripts/build_dashboard.py
 
+      - name: Tests (Genesys contract, measures, app smoke)
+        run: python -m pytest tests/ -v
+
       - name: Verify Genesys ingestion round-trip
         run: |
           python scripts/mock_genesys_server.py --port 8089 &

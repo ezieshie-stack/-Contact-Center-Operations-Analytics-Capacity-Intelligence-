@@ -18,6 +18,12 @@ documented API contract:
 > small tweaks (exact metric names per media type, conversation-vs-session
 > granularity, date-window page caps).
 
+**Contract test:** `tests/test_genesys_contract.py` runs the mapper against
+`tests/fixtures/genesys_conversation_detail.json` — a fixture hand-built to the
+documented conversation-detail shape, independent of the mock server. It covers
+an answered voice call, an abandoned chat, and the 20s threshold boundary. This
+is the strongest confidence available short of a live tenant.
+
 ## Steps (free Genesys Cloud developer org)
 
 1. Create a developer/trial org (developer.genesys.cloud).
