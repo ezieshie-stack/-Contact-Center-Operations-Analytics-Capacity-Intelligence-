@@ -31,6 +31,7 @@ hand-typed — and reproduces on a re-run. Full detail in [`METRICS.md`](METRICS
 | **Anomaly detection** | Recall on injected incidents | **100%** (4/4), false-alarm rate 4.6% vs 2.3% theoretical | Scored against a recorded answer key; SPC false-alarm rate quantified |
 | **Data quality** | Recall on injected bad rows | **100%** (40/40) | Validation rules checked against the known injected set |
 | **Trust / SSOT** | KPI reconciliation variance | **0.0** | Service level computed two independent ways must agree |
+| **REST API integration** | ETL round-trip parity vs source | **100%** abandon/answered/queue/channel; abandon rate exact, SL within 0.13pp | Full pull through a Genesys-shaped API, mapped back and reconciled |
 
 These are the claims to make in an interview — each comes with a method and a
 reproducible result, not an assertion.
@@ -65,6 +66,41 @@ python scripts/anomaly.py --k 2.0 --window 14
 python scripts/validate.py
 ```
 
+## REST API integration (Genesys Cloud)
+
+The BI layer can be fed by an automated API pull instead of a manual export.
+`scripts/genesys_ingest.py` implements a real-shaped Genesys Cloud Analytics
+integration:
+
+- OAuth2 **client-credentials** grant (`POST /oauth/token`)
+- `POST /api/v2/analytics/conversations/details/query` with an interval filter
+- **page-number pagination** over the full result set
+- **retry with exponential backoff**, honouring `Retry-After` on 429 / 5xx
+- mapping the nested Genesys shape (participants → sessions → segments +
+  millisecond metrics) down to the flat `fact_interactions` schema
+
+It uses only the Python standard library (no extra deps). A local mock of the
+API (`scripts/mock_genesys_server.py`) lets the whole thing run offline with no
+credentials, and deliberately returns one `429` so the retry path is exercised.
+
+```bash
+python scripts/mock_genesys_server.py --port 8089 &        # mock API
+python scripts/genesys_ingest.py --base-url http://127.0.0.1:8089 \
+    --client-id mock --client-secret mock \
+    --start 2026-01-25 --end 2026-05-24                     # -> data/ingested_interactions.csv
+```
+
+Against real Genesys Cloud, point `--base-url` at `https://api.<region>.pure.cloud`
+and pass a real OAuth client id/secret (or set `GENESYS_BASE_URL`,
+`GENESYS_CLIENT_ID`, `GENESYS_CLIENT_SECRET`). The pull reconciles to the source
+at 100% on abandon/answered/queue/channel and exact on abandonment rate.
+
+### Scheduled / automated refresh
+- The ingest script is idempotent per interval and cron / Task-Scheduler
+  friendly (daily incremental pull by date interval).
+- In Power BI Service, configure scheduled refresh on the published dataset
+  pointed at the landed CSVs (or a folder/Gateway source).
+
 ## Power BI build
 
 1. Load the `data/*.csv` files (Power Query: set types, add a 15-min interval
@@ -91,12 +127,14 @@ python scripts/validate.py
 Power BI (DAX, data modeling, dashboard design) · contact-center KPIs (service
 level, abandonment, AHT, ASA, occupancy, adherence) · data integrity & anomaly
 detection with a documented data dictionary and reporting standards ·
-forecasting and Erlang-C capacity planning · reporting automation.
+forecasting and Erlang-C capacity planning · **Genesys Cloud REST API
+integration** (OAuth, pagination, retry, schema mapping) · reporting automation.
 
 ## Repo layout
 
 ```
-scripts/    generate_data, forecast, erlang, anomaly, validate, run_pipeline
+scripts/    generate_data, forecast, erlang, anomaly, validate, run_pipeline,
+            genesys_ingest, mock_genesys_server
 docs/       data_dictionary.md, dax_measures.md
 data/        generated CSVs + metrics_report.json (created by the pipeline)
 METRICS.md  validated, reproducible headline metrics
