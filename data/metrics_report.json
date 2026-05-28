@@ -1,0 +1,53 @@
+{
+  "headline_kpis": {
+    "total_interactions": 50000,
+    "service_level_pct": 56.0,
+    "abandon_rate_pct": 8.4,
+    "avg_handle_time_s": 438.5,
+    "avg_speed_of_answer_s": 21.5
+  },
+  "forecast_backtest": {
+    "horizon_days": 21,
+    "train_days": 99,
+    "holt_winters": {
+      "mape_pct": 4.39,
+      "wape_pct": 4.08,
+      "rmse": 20.7,
+      "bias": -10.1
+    },
+    "seasonal_naive_baseline": {
+      "mape_pct": 7.01,
+      "wape_pct": 6.51,
+      "rmse": 32.1,
+      "bias": -7.4
+    },
+    "wape_improvement_vs_naive_pct": 37.3
+  },
+  "anomaly_detection": {
+    "tp": 4,
+    "fp": 21,
+    "fn": 0,
+    "precision": 0.16,
+    "recall": 1.0,
+    "f1": 0.276,
+    "false_alarm_rate_observed": 0.0461,
+    "false_alarm_rate_theoretical": 0.0228,
+    "evaluable_points": 460,
+    "note": "recall on injected incidents is the primary metric; extra flags are expected SPC false alarms at 2.0-sigma (~2.3% of normal points) and are routed to analyst review"
+  },
+  "data_quality_detection": {
+    "tp": 40,
+    "fp": 0,
+    "fn": 0,
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1": 1.0,
+    "injected": 40,
+    "total_detected": 40
+  },
+  "kpi_reconciliation": {
+    "method_a_global": 0.5603,
+    "method_b_daily_rollup": 0.5603,
+    "abs_variance": 0.0
+  }
+}

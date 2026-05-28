@@ -1,0 +1,5 @@
+queue,channel,target_service_level,target_answer_seconds
+Intake,Phone,0.8,20
+Crisis,Phone,0.8,20
+GeneralSupp,Phone,0.8,20
+GeneralChat,Chat,0.8,20
