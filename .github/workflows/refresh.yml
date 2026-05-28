@@ -18,6 +18,7 @@ on:
 jobs:
   refresh:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
 
@@ -41,10 +42,16 @@ jobs:
       - name: Verify Genesys ingestion round-trip
         run: |
           python scripts/mock_genesys_server.py --port 8089 &
-          sleep 3
+          MOCK_PID=$!
+          # wait until the mock answers before ingesting (no fixed sleep)
+          for i in $(seq 1 20); do
+            if curl -sf -X POST http://127.0.0.1:8089/oauth/token >/dev/null; then break; fi
+            sleep 1
+          done
           python scripts/genesys_ingest.py --base-url http://127.0.0.1:8089 \
             --client-id mock --client-secret mock \
             --start 2026-01-25 --end 2026-05-24
+          kill $MOCK_PID || true
 
       - name: Upload refreshed data + metrics
         uses: actions/upload-artifact@v4

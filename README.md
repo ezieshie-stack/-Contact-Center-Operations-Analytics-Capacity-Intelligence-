@@ -90,10 +90,11 @@ python scripts/genesys_ingest.py --base-url http://127.0.0.1:8089 \
     --start 2026-01-25 --end 2026-05-24                     # -> data/ingested_interactions.csv
 ```
 
-Against real Genesys Cloud, point `--base-url` at `https://api.<region>.pure.cloud`
-and pass a real OAuth client id/secret (or set `GENESYS_BASE_URL`,
-`GENESYS_CLIENT_ID`, `GENESYS_CLIENT_SECRET`). The pull reconciles to the source
-at 100% on abandon/answered/queue/channel and exact on abandonment rate.
+Against real Genesys Cloud, set the API host (`--base-url`/`GENESYS_BASE_URL`),
+the login host for OAuth (`--login-url`/`GENESYS_LOGIN_URL`), and a real client
+id/secret — see `docs/genesys_integration.md` for the full setup. The pull
+reconciles to the source at 100% on abandon/answered/queue/channel and exact on
+abandonment rate.
 
 ### Scheduled / automated refresh
 - The ingest script is idempotent per interval and cron / Task-Scheduler

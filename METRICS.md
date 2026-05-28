@@ -57,6 +57,6 @@ Recall **1.0** (40/40 injected issues caught;
 Service level from the stored flag vs an independent recomputation from raw
 fields (`answered` AND `wait_seconds <= 20`) -- the actual KPI definition:
 
-- Stored flag: 0.5602
-- Recomputed from raw: 0.5614
+- Stored flag: 0.5603
+- Recomputed from raw: 0.5616
 - **Absolute variance: 0.00126** (63 row-level mismatches)

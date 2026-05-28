@@ -79,22 +79,27 @@ def _request(method: str, url: str, headers: dict, body: bytes | None,
 
 
 class GenesysClient:
-    def __init__(self, base_url: str, client_id: str, client_secret: str):
+    def __init__(self, base_url: str, client_id: str, client_secret: str,
+                 login_url: str | None = None):
+        # In production these are different hosts: tokens are issued by the
+        # login host (https://login.<region>) and data is served by the API
+        # host (https://api.<region>). The mock serves both on one base, so
+        # login_url defaults to base_url when not given.
         self.base_url = base_url.rstrip("/")
+        self.login_url = (login_url or base_url).rstrip("/")
         self.client_id = client_id
         self.client_secret = client_secret
         self._token: str | None = None
 
     def authenticate(self) -> None:
-        # Genesys uses the login host in production; the mock accepts it on the
-        # same base. Token endpoint takes form-encoded client-credentials.
+        # OAuth2 client-credentials grant against the login host.
         data = urllib.parse.urlencode({"grant_type": "client_credentials"}).encode()
         import base64
         basic = base64.b64encode(
             f"{self.client_id}:{self.client_secret}".encode()
         ).decode()
         status, payload = _request(
-            "POST", f"{self.base_url}/oauth/token",
+            "POST", f"{self.login_url}/oauth/token",
             headers={
                 "Authorization": f"Basic {basic}",
                 "Content-Type": "application/x-www-form-urlencoded",
@@ -185,7 +190,11 @@ def map_conversation(conv: dict) -> dict | None:
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--base-url", default=os.environ.get("GENESYS_BASE_URL",
-                                                             "http://127.0.0.1:8089"))
+                                                             "http://127.0.0.1:8089"),
+                        help="API host, e.g. https://api.mypurecloud.com")
+    parser.add_argument("--login-url", default=os.environ.get("GENESYS_LOGIN_URL"),
+                        help="login host for OAuth, e.g. https://login.mypurecloud.com "
+                             "(defaults to --base-url, which is correct for the mock)")
     parser.add_argument("--client-id", default=os.environ.get("GENESYS_CLIENT_ID", "mock"))
     parser.add_argument("--client-secret", default=os.environ.get("GENESYS_CLIENT_SECRET", "mock"))
     parser.add_argument("--start", default="2026-01-25", help="interval start (YYYY-MM-DD)")
@@ -194,7 +203,8 @@ def main() -> None:
     parser.add_argument("--out", default="data/ingested_interactions.csv")
     args = parser.parse_args()
 
-    client = GenesysClient(args.base_url, args.client_id, args.client_secret)
+    client = GenesysClient(args.base_url, args.client_id, args.client_secret,
+                           login_url=args.login_url)
     client.authenticate()
     print(f"Authenticated to {args.base_url}")
 
