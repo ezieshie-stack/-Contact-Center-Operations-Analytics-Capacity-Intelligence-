@@ -39,6 +39,12 @@ jobs:
       - name: Validate + quality gate
         run: PYTHONPATH=scripts python scripts/validate.py --check
 
+      - name: Verify measure logic
+        run: PYTHONPATH=scripts python scripts/verify_measures.py
+
+      - name: Render dashboard pages
+        run: PYTHONPATH=scripts python scripts/build_dashboard.py
+
       - name: Verify Genesys ingestion round-trip
         run: |
           python scripts/mock_genesys_server.py --port 8089 &
@@ -61,3 +67,4 @@ jobs:
             data/*.csv
             data/metrics_report.json
             METRICS.md
+            docs/screenshots/*.png

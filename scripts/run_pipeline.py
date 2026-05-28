@@ -11,6 +11,8 @@ STEPS = [
     [sys.executable, "scripts/erlang.py"],
     [sys.executable, "scripts/anomaly.py"],
     [sys.executable, "scripts/validate.py"],
+    [sys.executable, "scripts/verify_measures.py"],
+    [sys.executable, "scripts/build_dashboard.py"],
 ]
 
 

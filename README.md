@@ -11,6 +11,16 @@ spreadsheet reporting into **automated, validated, and predictive** analytics.
 > scenario is realistic; the build, the metrics, and the validation are
 > genuinely mine and fully reproducible.
 
+## Dashboard
+
+Rendered reference of the three pages (Python/matplotlib, from the same data
+and measure definitions; the Power BI version is built from the TMDL model per
+`docs/powerbi_build_guide.md` and reconciles to `METRICS.md`):
+
+| Executive overview | Exceptions & data quality | Forecast & capacity |
+|---|---|---|
+| ![exec](docs/screenshots/1_executive_overview.png) | ![exceptions](docs/screenshots/2_exceptions.png) | ![forecast](docs/screenshots/3_forecast_capacity.png) |
+
 ## Scenario
 
 A national member-support contact center (queues: intake, crisis, general
