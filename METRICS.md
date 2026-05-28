@@ -10,7 +10,7 @@ generated data. Re-run the pipeline to reproduce them.
 | Total interactions | 50,000 |
 | Service level (answered <= 20s) | 56.0% |
 | Abandonment rate | 8.4% |
-| Average handle time (AHT) | 438.5s |
+| Average handle time (AHT) | 438.6s |
 | Average speed of answer (ASA) | 21.5s |
 
 ## 1. Forecast accuracy (backtest) -- *verifiable*
@@ -57,6 +57,6 @@ Recall **1.0** (40/40 injected issues caught;
 Service level from the stored flag vs an independent recomputation from raw
 fields (`answered` AND `wait_seconds <= 20`) -- the actual KPI definition:
 
-- Stored flag: 0.5603
-- Recomputed from raw: 0.5616
+- Stored flag: 0.5602
+- Recomputed from raw: 0.5615
 - **Absolute variance: 0.00126** (63 row-level mismatches)

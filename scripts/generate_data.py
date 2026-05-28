@@ -23,6 +23,7 @@ from __future__ import annotations
 
 import argparse
 import os
+import zlib
 from datetime import date, datetime, timedelta
 
 import numpy as np
@@ -238,7 +239,7 @@ def _inject_anomalies(df: pd.DataFrame, rng: np.random.Generator):
         mask = (df["interaction_datetime"].dt.date == spike_day) & (df["queue"] == queue)
         if not mask.any():
             continue
-        idx = df[mask].sample(frac=frac, random_state=hash((str(spike_day), queue)) % 2**31).index
+        idx = df[mask].sample(frac=frac, random_state=zlib.crc32(f"{spike_day}-{queue}".encode())).index
         df.loc[idx, ["abandoned", "answered", "answered_within_threshold"]] = [1, 0, 0]
         df.loc[idx, "handle_seconds"] = 0
         df.loc[idx, "disposition"] = "Abandoned"
