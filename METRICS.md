@@ -54,8 +54,9 @@ Recall **1.0** (40/40 injected issues caught;
 
 ## 4. KPI reconciliation -- *trust / single source of truth*
 
-Service level computed two independent ways must agree:
+Service level from the stored flag vs an independent recomputation from raw
+fields (`answered` AND `wait_seconds <= 20`) -- the actual KPI definition:
 
-- Global ratio: 0.5603
-- Daily roll-up: 0.5603
-- **Absolute variance: 0.0** (target 0.0 -> one consistent definition)
+- Stored flag: 0.5602
+- Recomputed from raw: 0.5614
+- **Absolute variance: 0.00126** (63 row-level mismatches)

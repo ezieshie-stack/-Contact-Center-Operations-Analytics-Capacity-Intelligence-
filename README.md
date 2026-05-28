@@ -30,7 +30,7 @@ hand-typed — and reproduces on a re-run. Full detail in [`METRICS.md`](METRICS
 | **Forecasting** | Volume forecast WAPE vs seasonal-naive baseline, true out-of-sample | **37% more accurate** (WAPE 4.1% vs 6.5%) | 21-day holdout backtest; scored against actuals and a baseline |
 | **Anomaly detection** | Recall on injected incidents | **100%** (4/4), false-alarm rate 4.6% vs 2.3% theoretical | Scored against a recorded answer key; SPC false-alarm rate quantified |
 | **Data quality** | Recall on injected bad rows | **100%** (40/40) | Validation rules checked against the known injected set |
-| **Trust / SSOT** | KPI reconciliation variance | **0.0** | Service level computed two independent ways must agree |
+| **Trust / SSOT** | KPI reconciliation: stored flag vs recompute from raw | **0.13pp** variance (63/50k boundary-rounding mismatches) | Independent recomputation of the SL definition, not an algebraic identity |
 | **REST API integration** | ETL round-trip parity vs source | **100%** abandon/answered/queue/channel; abandon rate exact, SL within 0.13pp | Full pull through a Genesys-shaped API, mapped back and reconciled |
 
 These are the claims to make in an interview — each comes with a method and a

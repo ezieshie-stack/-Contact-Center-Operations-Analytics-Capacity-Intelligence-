@@ -46,8 +46,9 @@
     "total_detected": 40
   },
   "kpi_reconciliation": {
-    "method_a_global": 0.5603,
-    "method_b_daily_rollup": 0.5603,
-    "abs_variance": 0.0
+    "method_a_stored_flag": 0.5602,
+    "method_b_recomputed_from_raw": 0.5614,
+    "abs_variance": 0.00126,
+    "row_level_mismatches": 63
   }
 }
