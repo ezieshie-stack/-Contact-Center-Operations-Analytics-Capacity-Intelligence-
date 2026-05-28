@@ -169,7 +169,27 @@ def headline_kpis(df: pd.DataFrame) -> dict:
     }
 
 
+def _check_thresholds(report: dict) -> list[str]:
+    """Return a list of gate failures; empty means the data passes CI."""
+    failures = []
+    rec = report["kpi_reconciliation"]["abs_variance"]
+    if rec > 1e-6:
+        failures.append(f"KPI reconciliation variance {rec} exceeds 1e-6")
+    an = report["anomaly_detection"]["recall"]
+    if an < 1.0:
+        failures.append(f"anomaly recall {an} below 1.0 (missed an injected incident)")
+    dq = report["data_quality_detection"]["recall"]
+    if dq < 1.0:
+        failures.append(f"data-quality recall {dq} below 1.0")
+    imp = report["forecast_backtest"]["wape_improvement_vs_naive_pct"]
+    if imp <= 0:
+        failures.append(f"forecast not beating naive baseline (improvement {imp}%)")
+    return failures
+
+
 def main() -> None:
+    import sys
+    check = "--check" in sys.argv
     data = "data"
     df = pd.read_csv(os.path.join(data, "fact_interactions.csv"),
                      parse_dates=["interaction_datetime"])
@@ -194,6 +214,15 @@ def main() -> None:
 
     _write_markdown(report)
     print(json.dumps(report, indent=2))
+
+    if check:
+        failures = _check_thresholds(report)
+        if failures:
+            print("\nQUALITY GATE FAILED:")
+            for f in failures:
+                print(f"  - {f}")
+            sys.exit(1)
+        print("\nQuality gate passed.")
 
 
 def _write_markdown(r: dict) -> None:

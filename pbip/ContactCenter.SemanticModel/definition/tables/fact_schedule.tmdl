@@ -1,0 +1,47 @@
+table fact_schedule
+
+	column agent_id
+		dataType: int64
+		summarizeBy: none
+		sourceColumn: agent_id
+
+	column date_key
+		dataType: int64
+		summarizeBy: none
+		sourceColumn: date_key
+
+	column scheduled_minutes
+		dataType: int64
+		summarizeBy: sum
+		sourceColumn: scheduled_minutes
+
+	column actual_minutes
+		dataType: int64
+		summarizeBy: sum
+		sourceColumn: actual_minutes
+
+	column team
+		dataType: string
+		summarizeBy: none
+		sourceColumn: team
+
+	measure 'Scheduled Minutes' = SUM ( 'fact_schedule'[scheduled_minutes] )
+		formatString: #,0
+
+	measure 'Available Minutes' = SUM ( 'fact_schedule'[actual_minutes] )
+		formatString: #,0
+
+	measure 'Schedule Adherence %' = DIVIDE ( [Available Minutes], [Scheduled Minutes] )
+		formatString: 0.0%
+
+	partition fact_schedule = m
+		mode: import
+		source =
+				let
+				    Source = Csv.Document(File.Contents(DataFolder & "\fact_schedule.csv"), [Delimiter = ",", Encoding = 65001, QuoteStyle = QuoteStyle.Csv]),
+				    Promoted = Table.PromoteHeaders(Source, [PromoteAllScalars = true]),
+				    Typed = Table.TransformColumnTypes(Promoted, {{"agent_id", Int64.Type}, {"date_key", Int64.Type}, {"scheduled_minutes", Int64.Type}, {"actual_minutes", Int64.Type}}),
+				    Merged = Table.NestedJoin(Typed, {"agent_id"}, dim_agent, {"agent_id"}, "agent", JoinKind.LeftOuter),
+				    Expanded = Table.ExpandTableColumn(Merged, "agent", {"team"}, {"team"})
+				in
+				    Expanded

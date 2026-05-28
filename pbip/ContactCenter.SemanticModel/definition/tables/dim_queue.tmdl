@@ -1,0 +1,32 @@
+table dim_queue
+
+	column queue
+		dataType: string
+		isKey
+		summarizeBy: none
+		sourceColumn: queue
+
+	column channel
+		dataType: string
+		summarizeBy: none
+		sourceColumn: channel
+
+	column target_service_level
+		dataType: double
+		summarizeBy: none
+		sourceColumn: target_service_level
+
+	column target_answer_seconds
+		dataType: int64
+		summarizeBy: none
+		sourceColumn: target_answer_seconds
+
+	partition dim_queue = m
+		mode: import
+		source =
+				let
+				    Source = Csv.Document(File.Contents(DataFolder & "\dim_queue.csv"), [Delimiter = ",", Encoding = 65001, QuoteStyle = QuoteStyle.Csv]),
+				    Promoted = Table.PromoteHeaders(Source, [PromoteAllScalars = true]),
+				    Typed = Table.TransformColumnTypes(Promoted, {{"queue", type text}, {"channel", type text}, {"target_service_level", type number}, {"target_answer_seconds", Int64.Type}})
+				in
+				    Typed

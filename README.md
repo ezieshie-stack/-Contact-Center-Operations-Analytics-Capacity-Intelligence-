@@ -103,14 +103,29 @@ at 100% on abandon/answered/queue/channel and exact on abandonment rate.
 
 ## Power BI build
 
-1. Load the `data/*.csv` files (Power Query: set types, add a 15-min interval
-   column, mark `dim_date` as the date table).
-2. Build relationships per the data dictionary (star schema).
-3. Paste the measures from `docs/dax_measures.md`.
-4. Pages: **Executive overview** (KPI scorecard), **Exceptions**
-   (anomaly + data-quality table with conditional formatting), **Forecast &
-   capacity** (actual-vs-forecast line + agents-required from
-   `staffing_requirements.csv`).
+The model is version-controlled as code and the ETL is documented as real M:
+
+- **Semantic model as code (TMDL):** `pbip/ContactCenter.SemanticModel/` — the
+  star-schema tables, relationships, and every DAX measure, deployable via
+  Power BI Desktop (PBIP) or Tabular Editor. (Authored here; opened/validated in
+  Desktop, which is Windows-only — see `pbip/README.md`.)
+- **Power Query (M):** `docs/power_query/*.m` — the actual mashup queries
+  (type-setting, 15-min interval, derived flags, schedule↔agent merge).
+- **Step-by-step assembly:** `docs/powerbi_build_guide.md` (Service or Desktop),
+  including the reconciliation check against `METRICS.md`.
+
+Pages: **Executive overview** (KPI scorecard), **Exceptions** (anomaly +
+data-quality with conditional formatting), **Forecast & capacity**
+(actual-vs-forecast + agents-required from `staffing_requirements.csv`).
+
+## Automation & quality gate
+
+`.github/workflows/refresh.yml` runs daily (and on push): it regenerates the
+data, recomputes forecast/Erlang/anomaly outputs, runs the Genesys ingest
+round-trip, and enforces a **data-quality gate** (`python scripts/validate.py
+--check` fails the build if reconciliation drifts or detection recall drops).
+Refreshed CSVs + `METRICS.md` are published as build artifacts; Power BI Service
+scheduled refresh consumes the landed CSVs.
 
 ## Tooling (all free, Mac M2-compatible)
 
@@ -135,7 +150,10 @@ integration** (OAuth, pagination, retry, schema mapping) · reporting automation
 ```
 scripts/    generate_data, forecast, erlang, anomaly, validate, run_pipeline,
             genesys_ingest, mock_genesys_server
-docs/       data_dictionary.md, dax_measures.md
+docs/       data_dictionary.md, dax_measures.md, powerbi_build_guide.md,
+            power_query/*.m
+pbip/       ContactCenter.SemanticModel (model + measures as TMDL)
+.github/    workflows/refresh.yml (scheduled refresh + quality gate)
 data/        generated CSVs + metrics_report.json (created by the pipeline)
 METRICS.md  validated, reproducible headline metrics
 ```

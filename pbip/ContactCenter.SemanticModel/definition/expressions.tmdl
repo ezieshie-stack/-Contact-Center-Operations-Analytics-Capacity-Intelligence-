@@ -1,0 +1,2 @@
+expression DataFolder = "C:\portfolio\contact-center\data" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true]
+	annotation PBI_ResultType = Text

@@ -1,0 +1,56 @@
+name: refresh-and-validate
+
+# Reporting automation: regenerate the dataset, recompute forecast / Erlang /
+# anomaly outputs, and enforce a data-quality gate. Runs daily and on every
+# push to the working branch. This is the "automated, validated" half of the
+# pipeline; Power BI Service scheduled refresh then pulls the landed CSVs.
+
+on:
+  schedule:
+    - cron: "0 6 * * *"      # 06:00 UTC daily
+  push:
+    paths:
+      - "scripts/**"
+      - "requirements.txt"
+      - ".github/workflows/refresh.yml"
+  workflow_dispatch: {}
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run pipeline (generate -> forecast -> erlang -> anomaly)
+        run: |
+          python scripts/generate_data.py
+          python scripts/forecast.py
+          python scripts/erlang.py
+          python scripts/anomaly.py
+
+      - name: Validate + quality gate
+        run: PYTHONPATH=scripts python scripts/validate.py --check
+
+      - name: Verify Genesys ingestion round-trip
+        run: |
+          python scripts/mock_genesys_server.py --port 8089 &
+          sleep 3
+          python scripts/genesys_ingest.py --base-url http://127.0.0.1:8089 \
+            --client-id mock --client-secret mock \
+            --start 2026-01-25 --end 2026-05-24
+
+      - name: Upload refreshed data + metrics
+        uses: actions/upload-artifact@v4
+        with:
+          name: contact-center-data
+          path: |
+            data/*.csv
+            data/metrics_report.json
+            METRICS.md

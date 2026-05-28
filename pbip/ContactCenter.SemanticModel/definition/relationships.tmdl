@@ -1,0 +1,19 @@
+relationship fact_interactions_dim_date
+	fromColumn: fact_interactions.date_key
+	toColumn: dim_date.date_key
+
+relationship fact_interactions_dim_agent
+	fromColumn: fact_interactions.agent_id
+	toColumn: dim_agent.agent_id
+
+relationship fact_interactions_dim_queue
+	fromColumn: fact_interactions.queue
+	toColumn: dim_queue.queue
+
+relationship fact_schedule_dim_date
+	fromColumn: fact_schedule.date_key
+	toColumn: dim_date.date_key
+
+relationship fact_schedule_dim_agent
+	fromColumn: fact_schedule.agent_id
+	toColumn: dim_agent.agent_id

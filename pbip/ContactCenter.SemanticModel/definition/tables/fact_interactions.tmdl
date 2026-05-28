@@ -1,0 +1,168 @@
+table fact_interactions
+
+	column interaction_id
+		dataType: int64
+		summarizeBy: none
+		sourceColumn: interaction_id
+
+	column interaction_datetime
+		dataType: dateTime
+		summarizeBy: none
+		sourceColumn: interaction_datetime
+
+	column date_key
+		dataType: int64
+		summarizeBy: none
+		sourceColumn: date_key
+
+	column queue
+		dataType: string
+		summarizeBy: none
+		sourceColumn: queue
+
+	column channel
+		dataType: string
+		summarizeBy: none
+		sourceColumn: channel
+
+	column agent_id
+		dataType: int64
+		summarizeBy: none
+		sourceColumn: agent_id
+
+	column wait_seconds
+		dataType: double
+		summarizeBy: none
+		sourceColumn: wait_seconds
+
+	column handle_seconds
+		dataType: double
+		summarizeBy: none
+		sourceColumn: handle_seconds
+
+	column acw_seconds
+		dataType: double
+		summarizeBy: none
+		sourceColumn: acw_seconds
+
+	column abandoned
+		dataType: int64
+		summarizeBy: none
+		sourceColumn: abandoned
+
+	column answered
+		dataType: int64
+		summarizeBy: none
+		sourceColumn: answered
+
+	column answered_within_threshold
+		dataType: int64
+		summarizeBy: none
+		sourceColumn: answered_within_threshold
+
+	column disposition
+		dataType: string
+		summarizeBy: none
+		sourceColumn: disposition
+
+	column interval_key
+		dataType: int64
+		summarizeBy: none
+		sourceColumn: interval_key
+
+	column dq_flag
+		dataType: string
+		summarizeBy: none
+		sourceColumn: dq_flag
+
+	measure 'Interactions Offered' = COUNTROWS ( 'fact_interactions' )
+		formatString: #,0
+
+	measure 'Interactions Answered' = CALCULATE ( [Interactions Offered], 'fact_interactions'[answered] = 1 )
+		formatString: #,0
+
+	measure 'Interactions Abandoned' = CALCULATE ( [Interactions Offered], 'fact_interactions'[abandoned] = 1 )
+		formatString: #,0
+
+	measure 'Answered Within Threshold' = CALCULATE ( [Interactions Offered], 'fact_interactions'[answered_within_threshold] = 1 )
+		formatString: #,0
+
+	measure 'Service Level %' = DIVIDE ( [Answered Within Threshold], [Interactions Offered] )
+		formatString: 0.0%
+
+	measure 'Abandonment Rate %' = DIVIDE ( [Interactions Abandoned], [Interactions Offered] )
+		formatString: 0.0%
+
+	measure 'AHT (sec)' =
+			CALCULATE (
+			    AVERAGEX ( 'fact_interactions', 'fact_interactions'[handle_seconds] + 'fact_interactions'[acw_seconds] ),
+			    'fact_interactions'[answered] = 1,
+			    'fact_interactions'[handle_seconds] >= 0
+			)
+		formatString: #,0
+
+	measure 'ASA (sec)' = AVERAGE ( 'fact_interactions'[wait_seconds] )
+		formatString: #,0
+
+	measure 'Handle Minutes' =
+			CALCULATE (
+			    SUMX ( 'fact_interactions', ( 'fact_interactions'[handle_seconds] + 'fact_interactions'[acw_seconds] ) / 60 ),
+			    'fact_interactions'[answered] = 1,
+			    'fact_interactions'[handle_seconds] >= 0
+			)
+		formatString: #,0
+
+	measure 'Occupancy %' = DIVIDE ( [Handle Minutes], [Available Minutes] )
+		formatString: 0.0%
+
+	measure 'Abandon Rate Roll Mean' =
+			VAR CurrentDate = MAX ( 'dim_date'[date] )
+			RETURN
+			CALCULATE (
+			    AVERAGEX ( VALUES ( 'dim_date'[date] ), [Abandonment Rate %] ),
+			    DATESINPERIOD ( 'dim_date'[date], CurrentDate - 1, -14, DAY )
+			)
+		formatString: 0.0%
+
+	measure 'Abandon Rate Roll StdDev' =
+			VAR CurrentDate = MAX ( 'dim_date'[date] )
+			RETURN
+			CALCULATE (
+			    STDEVX.S ( VALUES ( 'dim_date'[date] ), [Abandonment Rate %] ),
+			    DATESINPERIOD ( 'dim_date'[date], CurrentDate - 1, -14, DAY )
+			)
+		formatString: 0.0%
+
+	measure 'Abandon Upper Control Limit' = [Abandon Rate Roll Mean] + 2 * [Abandon Rate Roll StdDev]
+		formatString: 0.0%
+
+	measure 'Is Anomaly Day' =
+			IF (
+			    NOT ISBLANK ( [Abandon Upper Control Limit] ) && [Abandonment Rate %] > [Abandon Upper Control Limit],
+			    1, 0
+			)
+		formatString: 0
+
+	measure 'Data Quality Issues' =
+			CALCULATE (
+			    COUNTROWS ( 'fact_interactions' ),
+			    FILTER (
+			        'fact_interactions',
+			        'fact_interactions'[handle_seconds] < 0
+			            || ISBLANK ( 'fact_interactions'[handle_seconds] )
+			            || ( 'fact_interactions'[answered] = 1 && ISBLANK ( 'fact_interactions'[agent_id] ) )
+			    )
+			)
+		formatString: #,0
+
+	partition fact_interactions = m
+		mode: import
+		source =
+				let
+				    Source = Csv.Document(File.Contents(DataFolder & "\fact_interactions.csv"), [Delimiter = ",", Encoding = 65001, QuoteStyle = QuoteStyle.Csv]),
+				    Promoted = Table.PromoteHeaders(Source, [PromoteAllScalars = true]),
+				    Typed = Table.TransformColumnTypes(Promoted, {{"interaction_id", Int64.Type}, {"interaction_datetime", type datetime}, {"date_key", Int64.Type}, {"queue", type text}, {"channel", type text}, {"agent_id", Int64.Type}, {"wait_seconds", type number}, {"handle_seconds", type number}, {"acw_seconds", type number}, {"abandoned", Int64.Type}, {"answered", Int64.Type}, {"answered_within_threshold", Int64.Type}, {"disposition", type text}}),
+				    WithIntervalKey = Table.AddColumn(Typed, "interval_key", each Time.Hour([interaction_datetime]) * 100 + Number.RoundDown(Time.Minute([interaction_datetime]) / 15) * 15, Int64.Type),
+				    WithDQFlag = Table.AddColumn(WithIntervalKey, "dq_flag", each if [handle_seconds] = null then "handle_null" else if [handle_seconds] < 0 then "handle_negative" else if [answered] = 1 and [agent_id] = null then "answered_no_agent" else null, type text)
+				in
+				    WithDQFlag
