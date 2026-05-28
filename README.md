@@ -2,6 +2,8 @@
 
 [![refresh-and-validate](https://github.com/ezieshie-stack/-Contact-Center-Operations-Analytics-Capacity-Intelligence-/actions/workflows/refresh.yml/badge.svg)](https://github.com/ezieshie-stack/-Contact-Center-Operations-Analytics-Capacity-Intelligence-/actions/workflows/refresh.yml)
 
+**Live interactive dashboard:** https://ale5kikvte2het4punuwgp.streamlit.app/
+
 An end-to-end analytics solution for a member-support contact center: a data
 pipeline, a star-schema model, a DAX KPI framework, an anomaly / data-quality
 monitor, and a volume forecast with Erlang-C staffing. It turns manual, reactive
